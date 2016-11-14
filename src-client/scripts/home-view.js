@@ -112,7 +112,7 @@ const HomeView = React.createClass({
       return (
 
          <div>
-
+            
             <NavView/>
             <div>
                <div>

@@ -73,11 +73,11 @@ public class TOAdventureController {
             User user2 = users.findFirstByUsername("tom");
             User user3 = users.findFirstByUsername("rob");
             User user4 = users.findFirstByUsername("nick");
-            characters.save(new Character("avatars/human-standing.png", "avatars/human-jumping.png", 0, 12, 0, 0, user));
-            characters.save(new Character("avatars/elf-standing.png", "avatars/elf-jumping.png", 0, 143, 0, 0, user1));
-            characters.save(new Character("avatars/dark-elf-standing.png", "avatars/dark-elf-jumping.png", 0, 1235, 0, 0, user2));
-            characters.save(new Character("avatars/orc-standing.png", "avatars/orc-jumping.png", 0, 1234123, 0, 0, user3));
-            characters.save(new Character("avatars/skeleton-standing.png", "avatars/skeleton-jumping.png", 0, 13422141, 0, 0, user4));
+            characters.save(new Character("avatars/human-standing.png", "avatars/human-jumping.png", "avatars/human-death.png", 0, 12, 0, 0, user));
+            characters.save(new Character("avatars/elf-standing.png", "avatars/elf-jumping.png", "avatars/elf-death.png", 0, 143, 0, 0, user1));
+            characters.save(new Character("avatars/mister-t-standing.png", "avatars/mister-t-jumping.png", "avatars/mister-t-death.png", 0, 1235, 0, 0, user2));
+            characters.save(new Character("avatars/orc-standing.png", "avatars/orc-jumping.png", "avatars/orc-death.png", 0, 1234123, 0, 0, user3));
+            characters.save(new Character("avatars/skeleton-standing.png", "avatars/skeleton-jumping.png", "avatars/skeleton-death.png", 0, 13422141, 0, 0, user4));
         }
 
         if (avatars.count() == 0) {
@@ -87,12 +87,15 @@ public class TOAdventureController {
             avatars.save(new Avatar("avatars/elf-standing.png", Avatar.Animation.STANDING, Avatar.Race.ELF));
             avatars.save(new Avatar("avatars/elf-jumping.png", Avatar.Animation.JUMPING, Avatar.Race.ELF));
             avatars.save(new Avatar("avatars/elf-death.png", Avatar.Animation.DEATH, Avatar.Race.ELF));
-            avatars.save(new Avatar("avatars/dark-elf-standing.png", Avatar.Animation.STANDING, Avatar.Race.MISTER_T));
-            avatars.save(new Avatar("avatars/dark-elf-jumping.png", Avatar.Animation.JUMPING, Avatar.Race.MISTER_T));
+            avatars.save(new Avatar("avatars/mister-t-standing.png", Avatar.Animation.STANDING, Avatar.Race.MISTER_T));
+            avatars.save(new Avatar("avatars/mister-t-jumping.png", Avatar.Animation.JUMPING, Avatar.Race.MISTER_T));
+            avatars.save(new Avatar("avatars/mister-t-death.png", Avatar.Animation.DEATH, Avatar.Race.MISTER_T));
             avatars.save(new Avatar("avatars/orc-standing.png", Avatar.Animation.STANDING, Avatar.Race.ORC));
             avatars.save(new Avatar("avatars/orc-jumping.png", Avatar.Animation.JUMPING, Avatar.Race.ORC));
+            avatars.save(new Avatar("avatars/orc-death.png", Avatar.Animation.DEATH, Avatar.Race.ORC));
             avatars.save(new Avatar("avatars/skeleton-standing.png", Avatar.Animation.STANDING, Avatar.Race.SKELETON));
             avatars.save(new Avatar("avatars/skeleton-jumping.png", Avatar.Animation.JUMPING, Avatar.Race.SKELETON));
+            avatars.save(new Avatar("avatars/skeleton-death.png", Avatar.Animation.DEATH, Avatar.Race.SKELETON));
         }
 
         if (npcs.count() == 0) {
@@ -197,6 +200,10 @@ public class TOAdventureController {
         return avatars.findByAnimation(Avatar.Animation.STANDING);
     }
 
+    // route receives a map of json key value pairs. keys are "username", "password" and "filename".
+    // the user is created with the value of keys username and password and then the character is created by
+    // getting both avatars that are paired with the filename of what is coming back.
+
     @RequestMapping(path = "/signup", method = RequestMethod.POST)
     public Character getUser(HttpSession session, @RequestBody Map<String, String> json) throws PasswordStorage.CannotPerformOperationException {
         if (json.get("username") == null) {
@@ -207,7 +214,8 @@ public class TOAdventureController {
         users.save(user);
         Avatar avatar1 = avatars.findByFilename(json.get("filename"));
         Avatar avatar2 = avatars.findOne(avatar1.getId() + 1);
-        Character character = new Character(avatar1.getFilename(), avatar2.getFilename(), 0, 0, 0, 0, user);
+        Avatar avatar3 = avatars.findOne(avatar2.getId() + 1);
+        Character character = new Character(avatar1.getFilename(), avatar2.getFilename(), avatar3.getFilename(), 0, 0, 0, 0, user);
         characters.save(character);
         session.setAttribute("username", user.getUsername());
         return character;
@@ -239,19 +247,40 @@ public class TOAdventureController {
         return users.findFirstByUsername(username);
     }
 
-    // route saving checkpoints, still determining the functionality of this route.
+    // route expecting a map of key value pairs, keys expected are as follows. "id", "score". I pull the character from the DB
+    // using the id field of the character. then I set the score of that character object from the DB to the value of score from
+    // the front end. Then the object is saved to the database and returned to the client.
 
     @RequestMapping(path = "/checkpoint", method = RequestMethod.POST)
-    public ResponseEntity<Character> setCheckpoint(HttpSession session, @RequestBody Character character) {
+    public ResponseEntity<Character> setCheckpoint(HttpSession session, @RequestBody Map<String, Integer> json) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
             return new ResponseEntity<Character>(HttpStatus.FORBIDDEN);
         }
-        Character characterFromDb = characters.findOne(character.getId());
-        characterFromDb.setMoney(character.getMoney());
-        characterFromDb.setScore(character.getScore());
+        Character characterFromDb = characters.findOne(json.get("id"));
+        characterFromDb.setScore(json.get("score"));
         characters.save(characterFromDb);
-        return new ResponseEntity<Character>(character, HttpStatus.OK);
+        return new ResponseEntity<Character>(characterFromDb, HttpStatus.OK);
+
+    // route saving checkpoints, still determining the functionality of this route.
+
+//    @RequestMapping(path = "/checkpoint", method = RequestMethod.POST)
+//    public ResponseEntity<Character> setCheckpoint(HttpSession session, @RequestBody Character character) {
+//        String username = (String) session.getAttribute("username");
+//        if (username == null) {
+//            return new ResponseEntity<Character>(HttpStatus.FORBIDDEN);
+//        }
+//        Character characterFromDb = characters.findOne(character.getId());
+//        characterFromDb.setMoney(character.getMoney());
+//        characterFromDb.setScore(character.getScore());
+//        characters.save(characterFromDb);
+//        return new ResponseEntity<Character>(character, HttpStatus.OK);
+
+        /*
+            money: 590439853
+            score: 2309844903
+
+         */
     }
 
     // route to save the users inventory.
@@ -308,25 +337,29 @@ public class TOAdventureController {
 
     // route returning an array list of NPC assets
 
-    @RequestMapping(path = "random-assets", method = RequestMethod.GET)
-    public ArrayList<NPC> getRandomAssets(HttpSession session) {
-        //String username = (String) session.getAttribute("username");
-        User user = users.findFirstByUsername("mike");
+    @RequestMapping(path = "/random-assets", method = RequestMethod.GET)
+    public ArrayList<NPC> getRandomAssets(HttpSession session) throws Exception {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            throw new Exception("Not logged in!");
+        }
+        User user = users.findFirstByUsername(username);
+        //User user = users.findFirstByUsername("mike");
         Character character = characters.findByUser(user);
         ArrayList<NPC> theNpcs = new ArrayList<>();
         for (int i = 0; i < 60 + character.getCheckpoint(); i++) {
             double randNum =  Math.random();
-            if (randNum <= .70) {
+            if (randNum <= .97) {
                 int randId = (int) (Math.random() * (16 - 1)) + 1;
                 // int randId = (int) Math.ceil(Math.random() * 15);
                 theNpcs.add(npcs.findOne(randId));
             }
-            else if (randNum > .70 && randNum <= .90) {
+            else if (randNum > .97 && randNum <= .98) {
                 int randId = (int) (Math.random() * (29 - 17)) + 17;
                 //int randId = (int) Math.ceil(Math.random() * 11);
                 theNpcs.add(npcs.findOne(randId));
             }
-            else if (randNum > .90 && randNum <= .95) {
+            else if (randNum > .98 && randNum <= .99) {
                 theNpcs.add(npcs.findOne(16));
             }
             else {
@@ -370,7 +403,8 @@ public class TOAdventureController {
         //Avatar avatarFromDb = avatars.findOne(avatar.getId() + 1);
         Avatar avatar1 = avatars.findByFilename(avatar.getFilename());
         Avatar avatar2 = avatars.findOne(avatar1.getId() + 1);
-        characters.save(new Character(avatar.getFilename(), avatar2.getFilename(), 0, 0, 0, 0, user));
+        Avatar avatar3 = avatars.findOne(avatar2.getId() + 2);
+        characters.save(new Character(avatar.getFilename(), avatar2.getFilename(), avatar3.getFilename(), 0, 0, 0, 0, user));
         //characters.save(new Character(avatarFromDb.getFilename(), 0, 0, user));
         return avatars.findByRace(avatar.getRace());
     }
@@ -379,14 +413,14 @@ public class TOAdventureController {
 
     @RequestMapping(path = "/user-avatar", method = RequestMethod.GET)
     public ArrayList<Avatar> getUserAvatar(HttpSession session) throws Exception {
-//        String username = (String) session.getAttribute("username");
-//        if (username == null) {
-//            throw new Exception("Not logged in");
-//        }
-        //User user = users.findFirstByUsername(username);
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            throw new Exception("Not logged in");
+        }
+        User user = users.findFirstByUsername(username);
         ArrayList<Avatar> theAvatars = new ArrayList<>();
         //User user = users.findFirstByUsername(username);
-        User user = users.findFirstByUsername("mike");
+        //User user = users.findFirstByUsername("mike");
         //User user = users.findFirstByUsername("sam");
         //User user = users.findFirstByUsername("tom");
         //User user = users.findFirstByUsername("rob");

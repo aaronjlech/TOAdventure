@@ -13,6 +13,8 @@ const ModalView = React.createClass({
 
    render: function(){
 
+      console.log(this.props)
+
       if(this.props.crntView === ''){
 
          return (
@@ -60,7 +62,7 @@ const LoginModal = React.createClass({
          password: this.refs.password.value
       }
       ACTIONS.handleUserLogin(userLogin)
-      location.hash=""
+      location.hash="game"
    },
 
 
@@ -103,7 +105,7 @@ const CharPickModal = React.createClass({
       }
       ACTIONS.createNewUser(newUser)
 
-      location.hash=""
+      location.hash="game"
 
 
 

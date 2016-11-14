@@ -40,11 +40,16 @@ const ACTIONS = {
       let usrLogin = new UserModel()
 
       usrLogin.set(usrInfo)
-      console.log(usrLogin)
+      console.log( "hey" ,usrLogin)
 
       usrLogin.save().then(function(serverRes){
+
+
+         console.log( "tickle me" ,serverRes)
+
          console.log(serverRes)
          STORE.setStore('currentUser', serverRes)
+
       })
 
 
@@ -56,11 +61,12 @@ const ACTIONS = {
 // EXECUTE TO GRAB RANDOM ASSETS
    getObstacles: function(){
       let obst = new ObstacleCollection()
-
-      obst.fetch().then(function(){
-
-         return obst.models
-      })
+      //
+      // obst.fetch().then(function(){
+      //
+      //    STORE.setStore('obstacles', obst.models)
+      //
+      // })
    },
 
    createNewUser: function(modlVals){
@@ -69,7 +75,7 @@ const ACTIONS = {
       newUser.set(modlVals)
 
       newUser.save().then(function(serverRes){
-         STORE.setStore('currentUserData', serverRes)
+         STORE.setStore('currentUser', serverRes)
 
       })
 

@@ -33,8 +33,10 @@ const AppView = React.createClass({
             break;
          case "signup":
             return <ModalView crntView="signup" avatarData ={this.state.avatars}/>
+            break;
          case "game":
             return <GameView/>
+            break;
          default:
             return <h1> Page Not Found</h1>
             break;
